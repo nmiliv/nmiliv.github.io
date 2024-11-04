@@ -1,0 +1,31 @@
+body{
+    background-color: hsl(0,0%,15%);
+    color: hsl(0,0%,100%);
+    font-family: serif;
+}
+table, th, td{
+    border: 2px solid;
+    margin: auto;
+    border-style: ridge;
+}
+td{
+    padding: 5px;
+}
+.mainbody{
+    width: 70%;
+    margin: auto;
+}
+.center{
+    margin: auto;
+}
+a{
+    color: hsl(223, 59%, 71%);
+}
+h1{
+    text-align: center;
+}
+.interest{
+    width: 46%;
+    padding: 2%;
+    float: left;
+}
