@@ -25,7 +25,10 @@ h1{
     text-align: center;
 }
 .interest{
-    width: 46%;
-    padding: 2%;
-    float: left;
+    /* width: 96%; */
+    padding: 20px;
+    /* float: left; */
+    display: block
+    box-sizing: border-box;
+    height: 100%
 }
