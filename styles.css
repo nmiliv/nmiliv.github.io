@@ -30,21 +30,8 @@ h1{
     /* float: left; */
     display: block
     box-sizing: border-box;
-    height: 100%
+    height: auto;
 }
-
-/*a[data-title]:hover::after {
-    content: attr(data-title);
-    position: absolute;
-    border-style: ridge;
-    background-color: hsl(0,0%,15%);
-    color: hsl(0,0%,100%);
-    width: 25%;
-    min-width: 20em;
-    max-width: 100em;
-    padding: 4px;
-    box-shadow: 3px 3px 10px hsl(0,0%,15%);
-}*/
 
 .tooltip-container {
     content: attr(data-title);
@@ -61,4 +48,21 @@ h1{
     z-index: 100;
     display: none;
     opacity: 0;
+}
+
+canvas {
+  background: black;
+}
+
+button, input {
+    background: #333;
+    color: #fff;
+}
+
+.outputs {
+  border-style: ridge;
+}
+
+pre {
+  background-color:#333;
 }

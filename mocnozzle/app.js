@@ -4,12 +4,39 @@
 // design portion failed. Not entirely surprising considering that the original
 // code structure was a hot mess lol. Still, it's a pretty good starting point.
 
+
+"use strict"; //TODO i mean at this point, just use typescript or something.
+
+/* ============================
+   DOM REFERENCES
+============================ */
 const canvas = document.getElementById("plot");
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d"); // TODO 3D rendering mode could be cool...
 
-const deg = Math.PI / 180;
+const inputs = {
+  gamma: document.getElementById("gamma"),
+  gammaBox: document.getElementById("gammaBox"),
+  mach: document.getElementById("mach"),
+  machBox: document.getElementById("machBox"),
+  lines: document.getElementById("lines"),
+  linesBox: document.getElementById("linesBox"),
+  theta0: document.getElementById("theta0"),
+  theta0Box: document.getElementById("theta0Box"),
+  reset: document.getElementById("reset")
+};
 
-// ---------- Numerical Methods ----------
+const outputs = {
+  points: document.getElementById("points"),
+  verbose: document.getElementById("verbose")
+};
+
+const DEG = Math.PI / 180;
+
+/* ============================
+   NUMERICAL METHODS
+============================ */
+
+// TODO some day in the future this will be written back to python. Today is not that day.
 
 function bisect(low, high, tol, maxn, f) {
   let mid;
@@ -37,10 +64,15 @@ function secant(p0, p1, tol, maxn, f) {
 
 function combiBiSecant(low, high, crossover, tol, maxn, f) {
   const rough = bisect(low, high, crossover, maxn, f);
-  return secant(rough - crossover / 2, rough + crossover / 2, tol, maxn, f);
+  return secant(
+    rough - crossover / 2,
+    rough + crossover / 2,
+    tol, maxn, f);
 }
 
-// ---------- Gas Dynamics ----------
+/* ============================
+   GAS DYNAMICS
+============================ */
 
 function findNu(M, g) {
   return Math.sqrt((g + 1) / (g - 1)) *
@@ -56,7 +88,9 @@ function findMu(M) {
   return Math.asin(1 / M);
 }
 
-// ---------- Geometry ----------
+/* ============================
+   GEOMETRY
+============================ */
 
 function intersect(x1, y1, phi1, x2, y2, phi2) {
   const dx = x2 - x1;
@@ -68,7 +102,10 @@ function intersect(x1, y1, phi1, x2, y2, phi2) {
   ];
 }
 
-// ---------- MoC Nozzle ----------
+/* ============================
+   METHOD OF CHARACTERISTICS
+============================ */
+
 function designNozzle(desMach, theta0, lines, gamma) {
     let thetamax = findNu(desMach, gamma)/2; // calculate initial wall expansion angle
     let dtheta = (thetamax - theta0)/(lines - 1); // find spacing between initial characteristics
@@ -129,6 +166,7 @@ function designNozzle(desMach, theta0, lines, gamma) {
 
     // start finding cartesian positions of all the points
     let points = [[0],[1]]; // throat is located at (0, 1)
+    let edge = [[0],[1]]; // also keep track of the edge
 
     // find position of first point (centerline), this is just the mu angle of the characteristic
     let y3 = 0;
@@ -165,16 +203,12 @@ function designNozzle(desMach, theta0, lines, gamma) {
     points[1].push(y3);
 
     // big loop that handles all the points after the initial line
-    // linesrem = lines - 1;
-    // while linesrem > 0:
     for(let linesrem = lines-1; linesrem > 0; linesrem-=1){
         const index = points[0].length;
         const prevcenter = index - linesrem - 2; // keep track of what the centerline point on the previous line is
         y3 = 0; // add the point on the current line's centerline point
         x3 = (points[1][prevcenter+1]-y3) / Math.tan(nodes[prevcenter]['mu']) + points[0][prevcenter+1];
         let currNode = points[0].length; // also keep track of what the current centerline is
-        // use1 = nodes[prevcenter][0] // debug stuff
-        // print("calculating {:} using {:}".format(currNode, use1))
         points[0].push(x3);
         points[1].push(y3);
         // find remaining internal points
@@ -194,9 +228,6 @@ function designNozzle(desMach, theta0, lines, gamma) {
             x3 = arr[0];
             y3 = arr[1];
             currNode = points[0].length;
-            // use1 = nodes[prevupper][0]
-            // use2 = nodes[prevlower][0]
-            // print("calculating {:} using {:}, {:}".format(currNode, use1, use2))
             points[0].push(x3);
             points[1].push(y3);
         }
@@ -213,11 +244,15 @@ function designNozzle(desMach, theta0, lines, gamma) {
         y3 = arr[1];
         points[0].push(x3);
         points[1].push(y3);
+        edge[0].push(x3);
+        edge[1].push(y3);
     }
-    return [points, nodes];
+    return {points, nodes, edge};
 }
 
-// ---------- Drawing ----------
+/* ============================
+   RENDERING
+============================ */
 
 function draw(points, lines, nodes, gamma) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -288,7 +323,7 @@ function draw(points, lines, nodes, gamma) {
       edgey.push(points[1][lastend])
   }
   ctx.stroke();
-  ctx.strokeStyle = "black";
+  ctx.strokeStyle = "white";
   ctx.lineWidth = 5;
   ctx.beginPath();
   for(let i = 0; i < edgex.length; i++){
@@ -304,6 +339,8 @@ function draw(points, lines, nodes, gamma) {
       else ctx.lineTo(x, y);
   }
   ctx.stroke();
+  // TODO: this writing needs to be moved to update instead of draw...
+  /*
   var divthingy = document.getElementById("points");
   divthingy.innerHTML = "x\ty<br>";
   divthingy.innerHTML += "------\t------<br>";
@@ -317,71 +354,66 @@ function draw(points, lines, nodes, gamma) {
   nodes.unshift({nodenum:0, theta:0, mach:1, mu:findMu(1), nu:findNu(1, gamma), kmin:NaN, kmax:NaN})
   for(let i = 0; i < points[0].length; i++){
     divthingy.innerHTML+= points[0][i].toFixed(4) + "\t" + points[1][i].toFixed(4) + "\t" + nodes[i].theta.toFixed(4) + "\t" + nodes[i].mach.toFixed(4) + "\t" + nodes[i].mu.toFixed(4) + "\t" + nodes[i].nu.toFixed(4) + "\t" + nodes[i].kmin.toFixed(4) + "\t" + nodes[i].kmax.toFixed(4) + "<br>";
-  }
+  }*/
 }
 
-// ---------- UI ----------
+/* ============================
+   UI LOGIC
+============================ */
 
 function update() {
-  const gamma = +gammaInput.value;
-  const mach = +machInput.value;
-  const lines = +linesInput.value;
-  const theta0 = +theta0Input.value * deg;
-  const ans = designNozzle(mach, theta0, lines, gamma);
-  const points = ans[0];
-  const nodes = ans[1]
+  const gamma = +inputs.gamma.value;
+  const mach = +inputs.mach.value;
+  const lines = +inputs.lines.value;
+  const theta0 = +inputs.theta0.value * DEG;
+
+  const result = designNozzle(mach, theta0, lines, gamma);
+  const points = result.points;
+  const nodes = result.nodes;
   draw(points, lines, nodes, gamma);
 
+  // TODO these might be broken. This is printing all points instead of only the edge.
+  outputs.points.textContent = "x\ty\n------\t------\n";
+  outputs.points.textContent += result.edge[0]
+    .map((v, i) => `${v.toFixed(4)}\t${result.edge[1][i].toFixed(4)}`)
+    .join("\n");
+
+  nodes.unshift({nodenum:0, theta:0, mach:1, mu:findMu(1), nu:findNu(1, gamma), kmin:NaN, kmax:NaN})
+  outputs.verbose.textContent = "x\ty\ttheta\tmach\tmu\tnu\tkmin\tkmax\n------\t------\t------\t------\t------\t------\t------\t------\n";
+  outputs.verbose.textContent += result.nodes
+    .map((n, i) =>
+      `${result.points[0][i].toFixed(4)}\t${result.points[1][i].toFixed(4)}\t${n.theta.toFixed(4)}\t${n.mach.toFixed(4)}\t${n.mu.toFixed(4)}\t${n.nu.toFixed(4)}\t${n.kmin.toFixed(4)}\t${n.kmax.toFixed(4)}`
+    ).join("\n");
+    console.log(points);
+    console.log(nodes);
 }
 
-function updateBox() {
-  gammaInput.value = gammaInputBox.value;
-  machInput.value = machInputBox.value;
-  linesInput.value = linesInputBox.value;
-  theta0Input.value = theta0InputBox.value;
+function sync(range, box) {
+  range.addEventListener("input", () => {
+    box.value = range.value;
+    update();
+  });
+  box.addEventListener("change", () => {
+    range.value = box.value;
+    update();
+  });
+}
 
+/* ============================
+   INIT
+============================ */
+
+sync(inputs.gamma, inputs.gammaBox);
+sync(inputs.mach, inputs.machBox);
+sync(inputs.lines, inputs.linesBox);
+sync(inputs.theta0, inputs.theta0Box);
+
+inputs.reset.addEventListener("click", () => {
+  inputs.gamma.value = inputs.gammaBox.value = 1.4;
+  inputs.lines.value = inputs.linesBox.value = 7;
+  inputs.theta0.value = inputs.theta0Box.value = 0.375;
+  inputs.mach.value = inputs.machBox.value = 2.4;
   update();
-}
-
-function updateSlider() {
-  gammaInputBox.value = gammaInput.value;
-  machInputBox.value = machInput.value;
-  linesInputBox.value = linesInput.value;
-  theta0InputBox.value = theta0Input.value;
-
-  update();
-}
-
-function reset() {
-  gammaInput.value = 1.4;
-  machInput.value = 2.4;
-  linesInput.value = 7;
-  theta0Input.value = 0.375;
-  gammaInputBox.value = gammaInput.value;
-  machInputBox.value = machInput.value;
-  linesInputBox.value = linesInput.value;
-  theta0InputBox.value = theta0Input.value;
-  update();
-}
-
-// Bind inputs
-const gammaInput = document.getElementById("gamma");
-const machInput = document.getElementById("mach");
-const linesInput = document.getElementById("lines");
-const theta0Input = document.getElementById("theta0");
-
-[gammaInput, machInput, linesInput, theta0Input]
-  .forEach(e => e.addEventListener("input", updateSlider));
-
-const gammaInputBox = document.getElementById("gammaBox");
-const machInputBox = document.getElementById("machBox");
-const linesInputBox = document.getElementById("linesBox");
-const theta0InputBox = document.getElementById("theta0Box");
-
-[gammaInputBox, machInputBox, linesInputBox, theta0InputBox]
-  .forEach(e => e.addEventListener("input", updateBox));
-
-const resetInput = document.getElementById("reset");
-resetInput.addEventListener("click", reset)
+});
 
 update();

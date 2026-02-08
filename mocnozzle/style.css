@@ -6,7 +6,7 @@ body {
 
 canvas {
   background: white;
-  border: 1px solid #ccc;
+  border: ridge #ccc;
   display: block;
   margin-bottom: 15px;
 }
@@ -18,17 +18,32 @@ canvas {
 }
 
 label {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 6px;
+}
+
+.outputs-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 5px;
 }
 
 .outputs {
   border-style: double;
   padding:5px;
   margin:5px;
+  overflow: auto;
+  max-height: 14em;
 }
 
 pre {
   background-color:#ddd;
+  padding: 6px;
 }
+
+.controls, .outputs-container {
+  max-width: 900px;
+}
+/* todo: add variables to some definitions */

@@ -11,7 +11,7 @@
 <!-- TODO: add some sort of header, footer, side decorations, etc... -->
 <div class="mainbody">
     <h1>Hey there!</h1>
-    <h2>I'm Noa, I make things, and sometimes remember to post them places</h2>
+    <h2>I'm Noa, I make things, and sometimes remember to post them places.</h2>
     <p>Mostly mechanical/aerospace things. I'll get excited about nearly anything space related, but computers, linux, and music/modular synths are also pretty cool. <br>
     This place is still under construction so uhh don't worry if there's still a bunch of missing content :)</p>
 
@@ -19,17 +19,17 @@
         <p class="center"><center>Things I do:</center></p>
         <table>
             <tr>
-                <td>portfolio and resume</td>
+                <td><a href="Portfolio -- Noah Milivojevic.pdf">portfolio</a> and <a href="Milivojevic_resume_spring26.pdf">resume</a></td>
                 <td><a href="projects.html">all projects</a></td>
-                <td><a href="organized.html">organized blog</a></td>
-                <td><a href="weekly.html">disorganized blog</a></td>
-                <td>general interests</td>
+               <!-- <td><a href="organized.html">organized blog</a></td>
+                <td><a href="weekly.html">disorganized blog</a></td>-->
+                <td><a href="#gen-interests">general interests</a></td>
             </tr>
         </table>
     </div>
     <p>Why does this website look like this? I've had a million different ideas bouncing around my head for what my portfolio website should look like since about as long as I can remember (15 or 16 is probably the age), but all those ideas would inevitably get too complex and not only would quickly get out of my reach, but would take a while to implement even if I was much better at the whole webdev thing. Or maybe not. Either way, after many years of feature creep I have decided to remove all features and make something simple in pure HTML, because it works and I can do it. Personally I think HTML has a neat look to it! (and yes, I am a fan of <a href="https://motherfuckingwebsite.com/"> "This is a motherfucking website"</a>)</p>
     <div>
-        <h2>General interests</h2>
+        <h2 id="gen-interests">General interests</h2>
         <div style="grid-auto-rows: calc((min(100vw, 574px) - 24px) / (110.0)); grid-template-columns: repeat(2, 1fr); display: grid; justify-content: space-between; align-items: start; position: relative; width: 100%;">
         <div class="interest">
             <h3>Spelinking</h3>
@@ -45,7 +45,7 @@
         </div>
         <div class="interest">
             <h3>Biking/running/hiking</h3>
-            <p>Sometimes I do this a little too much. Stuff like "I'll go for a little walk before lunch" turning into a 15+ mile trek across the countryside that takes the whole day. Sure you could probably get further in a car, but there's just so many cool little things you can see when you have the freedom to veer off into the buches at the slightest distraction.</p>
+            <p>Sometimes I do this a little too much. Stuff like "I'll go for a little walk before lunch" turning into a 15+ mile trek across the countryside that takes the whole day. Sure you could probably get further in a car, but there's just so many cool little things you can see when you have the freedom to veer off into the bushes at the slightest distraction.</p>
         </div>
         <div class="interest">
             <h3>Two Sleepy People (2025)</h3>
@@ -53,9 +53,13 @@
         </div>
         <!-- This script automagically organizes my interests into a nice card layout -->
         <script>
-        const interests = document.getElementsByClassName("interest");
-        for (const interest of interests) {
-            interest.style.gridRowStart = Math.round(interest.scrollHeight/5) + " span";
+        window.addEventListener("resize", organizeInterests, false);
+        window.addEventListener("load", organizeInterests, false);
+        function organizeInterests() {
+            const interests = document.getElementsByClassName("interest");
+            for (const interest of interests) {
+                interest.style.gridRowStart = Math.round(interest.scrollHeight/5) + " span";
+            }
         }
     </script>
         </div></div>
@@ -75,7 +79,9 @@
 
 </body>
 
-<!-- table of further links: portfolio (brief projects), all projects w/ longer descriptions , projects/general blog (maybe keep the weekly/monthly, personal thoughts blog internal to this?) , art/music or general interests? -->
+<!-- table of further links: portfolio (brief projects), all projects w/ longer descriptions , projects/general blog (maybe keep the weekly/monthly, personal thoughts blog internal to this?) , art/music or general interests?-->
 
 
 <!-- ok so what if this looked like an old pure html website, light serif text on dark background, but with nice bold sans markings and goofy arrows? -->
+
+<!-- TODO this doesn't look very good on mobile and small screens... likely can fix with a min-width. -->
