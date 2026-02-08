@@ -32,3 +32,33 @@ h1{
     box-sizing: border-box;
     height: 100%
 }
+
+/*a[data-title]:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    border-style: ridge;
+    background-color: hsl(0,0%,15%);
+    color: hsl(0,0%,100%);
+    width: 25%;
+    min-width: 20em;
+    max-width: 100em;
+    padding: 4px;
+    box-shadow: 3px 3px 10px hsl(0,0%,15%);
+}*/
+
+.tooltip-container {
+    content: attr(data-title);
+    position: absolute;
+    border-style: ridge;
+    background-color: hsl(0,0%,15%);
+    color: hsl(0,0%,100%);
+    width: 25%;
+    min-width: 20em;
+    max-width: 100em;
+    padding: 4px;
+    box-shadow: 3px 3px 10px hsl(0,0%,15%);
+    height: auto;
+    z-index: 100;
+    display: none;
+    opacity: 0;
+}

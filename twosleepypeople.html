@@ -53,19 +53,30 @@ For Lucy, the nightmares and neuroses are from the experience of her mother brin
 <h2> Footnotes </h2>
 <ol id="footnotes">
 <li class="footnote" id="dune">Hence why making Dune movies is so hard, those books are mostly internal monologues.</li>
-<li class="footnote" id="norse">Seriously, have you ever tried visualizing a Norse creation myth Those things have got to be non-Euclidean.</li>
+<li class="footnote" id="norse">Seriously, have you ever tried visualizing a Norse creation myth? Those things have got to be non-Euclidean.</li>
 <li class="footnote" id="memory">I don't actually remember seeing this, but this detail was in my notes that I took as soon as I got home from the theater so I'm going to trust that it was there.</li>
 <li class="footnote" id="ovaries">Maybe I'm thinking about wombs a little too much because I recently watched Northoflowo’s animation "Safe For Work." It is a cool animation and you should go watch it!</li>
 <li class="footnote" id="umwelt">Sort of like a miniature version of Umwelt, the idea that our experience of reality is vastly different than that of an animal or other living being possessing a different set of senses, needs, and behaviors.</li>
 <li class="footnote" id="freud">This is also a question that I always had as a queer person: how does the classical Freud idea of “you want to have sex with your opposite sex parent” mesh with people who aren't straight? The answer I have settled on since my youth is that it could really be some part of either of your parents that could be projected onto your potential mate(s), regardless of the gender of any party involved. It seems like Two Sleepy People takes a similar approach.</li>
-<li class="footnote" id="gaydar">Though that may just be my gaydar screaming at me because Caroline Grossman, who portrays Lucy in the film, is lesbian and would not date a guy. Maybe my gaydar is just penetrating through the veneer of acting.  I do not know. Maybe they actually do get together. I think the film would still work in that way, it is up to you how you want to interpret the ending.</li>
+<li class="footnote" id="gaydar">I feel like Caroline Grossman and Baron Ryan (who played Lucy and Syd in the film, respectively), did a really good job of portraying Lucy and Syd as unquestionably united in the dream realm and amicable but awkwardly not-united in the real world. I may have been slightly misled in this, as I originally though that Caroline Grossman, who portrays Lucy in the film, is lesbian. Turns out she's bi. My gaydar was correct, but the aim was a little off. Oops. Either way, I originally chalked this up to my gaydar telling me that Caroline would not date a guy and my gaydar was going past the acting, but that's not the case. Maybe they actually do get together. I think the film would still work in that way, it is up to you how you want to interpret the ending.</li>
 <li class="footnote" id="lmao">The neat thing is, this footnote is fake and shouldn't show up in the displayed HTML.</li>
 </ol>
+<div class="tooltip-container"></div>
 </div>
 <script>
+function getWidth() {
+  return Math.max(
+    document.body.scrollWidth,
+    document.documentElement.scrollWidth,
+    document.body.offsetWidth,
+    document.documentElement.offsetWidth,
+    document.documentElement.clientWidth
+  );
+}
 const headnotes = document.getElementsByClassName("headnote");
 const footnotes = document.getElementsByClassName("footnote")
 const footlist = document.getElementById("footnotes")
+const tooltipContainer = document.querySelector(".tooltip-container");
 var newlist = "";
 //footlist.innerHTML = "";
 var counter = 1;
@@ -77,13 +88,41 @@ for (const headnote of headnotes) {
         if (footnote.id == searchkey) {
             headnote.id += "-head";
             footnote.id += "-foot";
-            headnote.innerHTML += " [<a href=\"#" + footnote.id + "\" data-toggle=\"tooltip\" title=\"" + footnote.innerHTML + "\">" + counter + "</a>]";
+            const footnote_div = "<div class=\"tooltip-container\">" + footnote.innerHTML + "</div>";
+            headnote.innerHTML += " [<a href=\"#" + footnote.id + "\" data-toggle=\"tooltip\">" + counter + "</a>]";
+            headnote.addEventListener("mouseenter", (e) => {
+                if (e.pageX < getWidth()/2){
+                    tooltipContainer.style.left = `${e.pageX}px`;
+                } else {
+                    tooltipContainer.style.left = `${e.pageX - getWidth()*0.25}px`;
+                }
+                tooltipContainer.style.top = `${e.pageY}px`;
+                tooltipContainer.innerHTML = footnote.innerHTML;
+                tooltipContainer.style.display = 'block';
+                tooltipContainer.style.opacity = 1;
+            });
+            headnote.addEventListener("mouseout", (e) => {
+                tooltipContainer.style.display = 'none';
+                tooltipContainer.style.opacity = 0;
+            });
             footnote.innerHTML = "<a href=\"#" + headnote.id + "\">" + "^</a> " + footnote.innerHTML;
             newlist += footnote.outerHTML + "\n";
         }
     }
     counter++;
 }
+tooltipContainer.addEventListener('mouseenter', () => {
+
+    tooltipContainer.style.display = 'block';
+    tooltipContainer.style.opacity = 1;
+
+})
+tooltipContainer.addEventListener('mouseout', () => {
+
+    tooltipContainer.style.display = 'none';
+    tooltipContainer.style.opacity = 0;
+
+})
 footlist.innerHTML = newlist;
 // <a href="#" data-toggle="tooltip" title="aaaaa"><sup>1</sup></a>
 </script>
