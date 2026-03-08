@@ -54,9 +54,16 @@ canvas {
   background: black;
 }
 
-button, input {
+button, input, textarea {
     background: #333;
     color: #fff;
+    border-radius: 5px;
+}
+
+textarea {
+  padding: 10px;
+  max-width: 100%;
+
 }
 
 .outputs {

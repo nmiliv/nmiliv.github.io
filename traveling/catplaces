@@ -1,0 +1,5 @@
+#!/bin/sh
+
+PLACES_DIR=./places
+cd $PLACES_DIR
+ls | grep json > place_file_list.txt

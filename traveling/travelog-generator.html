@@ -1,0 +1,176 @@
+<!doctype HTML>
+<html>
+<head>
+    <title>Noa Milivojevic</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="boxes.css">
+    <meta charset="UTF-8">
+    <!-- TODO -- these keywords and header stuff should definitely change on most pages...-->
+    <meta name="keywords" content="Noa, Noah, Noa/h, Milivojevic">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- no clue what this should actually be -->
+</head>
+<body>
+<div class="mainbody">
+<h1>Travelog Generator</h1>
+<p>Well, this is awkward! You normally shouldn't be able to see this page. This page is just to provide me with an easier way of generating JSON data of my travels to feed into the main travel webpage.</p>
+<div style="display: flex">
+<div style="max-width: 50%; float:left;">
+<div style="display: flex;">
+<div style="width: 50%; float: left;">
+<label for="name">Name</label>
+<input id="name" type="text">
+<br>
+
+<label for="parent">Parent</label>
+<input id="parent" list="suggestions">
+<datalist id="suggestions"></datalist>
+<br>
+
+<label for="tags">Tags</label>
+<input id="tags" list="tag-suggest">
+<datalist id="tag-suggest">
+</datalist>
+<button id="add-tag">Add Tag</button>
+<br>
+</div>
+<div style="width: 50%; float: right;" id="taglist">
+</div>
+</div>
+
+<div style="width:100%; float: none;">
+<label for="content">Description</label>
+<textarea id="content" name="content" rows="5" cols="60"></textarea>
+<!-- TODO add preview and go back and edit sidebar -->
+<button id="generate" style="width:calc(100% - 20px); margin:10px">Create Place</button>
+<button id="download" style="width:calc(100% - 20px); margin:10px" onclick="downloadFile()">Download</button>
+</div>
+</div>
+<div style="float: right; width:50%;" id="newplacediv">
+New Places
+</div>
+</div>
+<div style="width: 100%; float: none;">
+<label for="tagsearch-text">Search tags </label> <!-- TODO this only does one at a time right now... would be nice if you could auto add on click and also see the full list (allow scrolling) wihtout having to type anything-->
+<input id="tagsearch-text" list="tag-suggest"><!-- TODO referencing an already existing tag list...-->
+<button id="tagsearch-button">Search</button>
+<button id="tagsearch-clear">Clear</button>
+<div id="searchtaglist"></div>
+<h2>Sample Output</h2>
+<div id="logs"></div>
+<script src="./printPlaceList.js"></script>
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.js"></script>
+<script>
+const searchButton = document.getElementById("tagsearch-button"); // TODO do we want to make places collapsible? collapse or expand by default? Also buttons to collapse/expand all
+const searchClearButton = document.getElementById("tagsearch-clear");
+const searchBox = document.getElementById("tagsearch-text");
+let searchtaglist = [];
+searchButton.addEventListener("click", () => {
+    searchtaglist.push(searchBox.value);
+    reloadTagsP(document.getElementById("searchtaglist"), searchtaglist);
+    makePlaceList(myplacelist.concat(newplacelist), searchtaglist);
+});
+searchClearButton.addEventListener("click", () => {
+    searchtaglist = [];
+    reloadTagsP(document.getElementById("searchtaglist"), searchtaglist);
+    makePlaceList(myplacelist.concat(newplacelist)); // can use default argument since this clears the search
+});
+// TODO reloadSearchTags() --> this needs to be rolled together with the other reloadTags() function
+const reloadTagsP = (tagsdiv, ftaglist) => { // TODO clear search when we hit the search button
+    tagsdiv.innerHTML = "";
+    for (const item of ftaglist) {
+        const newdiv = document.createElement("div");
+        tagsdiv.appendChild(newdiv);
+        newdiv.innerHTML += item;
+        newdiv.innerHTML += " <button id=\"" + item + "-rm-button\">Remove</button>";
+        document.getElementById(item+"-rm-button").addEventListener("click", () => {
+            ftaglist.splice(ftaglist.indexOf(item), 1);
+            newdiv.remove();
+            reloadTagsP(tagsdiv, ftaglist);
+        });
+    }
+}
+
+
+
+
+const inputs = {
+    name: document.getElementById("name"),
+    parent: document.getElementById("parent"),
+    tags: document.getElementById("tags"),
+    tagbutton: document.getElementById("add-tag"),
+    content: document.getElementById("content"),
+    generate: document.getElementById("generate")
+};
+let myplacelist = [];
+
+window.onload = async function() {
+    myplacelist = await returnPlaceList();
+    makePlaceList(myplacelist); // ok to use default argument bc tag search is empty --> unless we start doing funny URL things
+    // TODO how to do the funny url thing for searching?
+    reloadTagsP(document.getElementById("taglist"), taglist);
+}
+
+const newplacelist = [];
+inputs.generate.addEventListener("click", () => {
+    const newplace = {
+        name: inputs.name.value,
+        content: inputs.content.value};
+    if (inputs.parent.value !== "") newplace.parentName = inputs.parent.value;
+    if (taglist.length !== 0) newplace.taglist = JSON.parse(JSON.stringify(taglist));
+    newplacelist.push(newplace);
+    inputs.name.value = "";
+    inputs.parent.value = "";
+    inputs.content.value = "";
+    taglist = [];
+    reloadTagsP(document.getElementById("taglist"), taglist);
+    inputs.tags.value = "";
+    clearPlaceList();
+    makePlaceList(myplacelist.concat(newplacelist), searchtaglist);
+    loadNewPlaces();
+});
+taglist = [];
+
+function loadNewPlaces() {
+    const mydiv = document.getElementById("newplacediv");
+    mydiv.innrHTML = "";
+    while (mydiv.firstChild) mydiv.removeChild(mydiv.lastChild);
+    for (const place of newplacelist) {
+        const newdiv = document.createElement("div");
+        mydiv.appendChild(newdiv);
+        newdiv.innerHTML = place.name;
+        newdiv.innerHTML += " <button id=\"" + place.name + "-edit-button\">Edit</button> <button id=\"" + place.name + "-rm-button\">Remove</button>";
+        document.getElementById(place.name+"-edit-button").addEventListener("click", () => {
+            inputs.name.value = place.name;
+            inputs.parent.value = place.parentName;
+            if ('taglist' in place) taglist = JSON.parse(JSON.stringify(place.taglist)); // TODO does this need to be a deep copy?
+            reloadTagsP(document.getElementById("taglist"), taglist);
+            inputs.content.value = place.content;
+            newplacelist.splice(newplacelist.indexOf(place), 1);
+            newdiv.remove();
+            loadNewPlaces();
+        });
+        document.getElementById(place.name+"-rm-button").addEventListener("click", () => {
+            newplacelist.splice(newplacelist.indexOf(place), 1);
+            newdiv.remove();
+            loadNewPlaces();
+        });
+    }
+}
+inputs.tagbutton.addEventListener("click", () => {
+    if (inputs.tags.value !== "") taglist.push(inputs.tags.value);
+    reloadTagsP(document.getElementById("taglist"), taglist);});
+const downloadFile = () => {
+    var zip = new JSZip();
+    const link = document.createElement("a");
+    for (place of newplacelist) zip.file(place.name+".json", JSON.stringify(place));
+    zip.generateAsync({type:"blob"}).then(function (blob) {
+        const file = new Blob([blob], {type: 'application/json'});
+        link.href = URL.createObjectURL(file);
+        link.download = "places " + Date.now().toString() + ".zip";
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
+};
+</script>
+</div>
+</body>

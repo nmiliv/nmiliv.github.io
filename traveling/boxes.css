@@ -1,0 +1,9 @@
+.travel-children{
+    padding-left: 10px;
+    border-left: 2px ridge #fff;
+}
+
+label{
+    display: block;
+    padding-top:10px;
+}
