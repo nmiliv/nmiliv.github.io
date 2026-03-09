@@ -7,3 +7,25 @@ label{
     display: block;
     padding-top:10px;
 }
+
+.tag{
+    padding-left: 6px;
+    padding-right: 6px;
+    color: white;
+    border-radius: 5px;
+    font-family: var(--main-font-family);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0px 0px;
+    transform: translate(0px, 0px);
+    transition: 0.3s;
+}
+.tag:hover{
+    box-shadow: 2px 2px;
+    transform: translate(-1px, -1px);
+}
+.tag:active{
+    transition: 0s;
+    box-shadow: 0 0;
+    transform: translate(0px 0px);
+}

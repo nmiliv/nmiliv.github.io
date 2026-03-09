@@ -1,7 +1,9 @@
 body{
-    background-color: hsl(0,0%,15%);
+    --main-background-color: hsl(0,0%,15%);
+    background-color: var(--main-background-color);
     color: hsl(0,0%,100%);
-    font-family: serif;
+    --main-font-family: serif;
+    font-family: var(--main-font-family);
 }
 table, th, td{
     border: 2px solid;
@@ -72,4 +74,8 @@ textarea {
 
 pre {
   background-color:#333;
+}
+
+h3{
+    background-color: var(--main-background-color);
 }
