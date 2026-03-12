@@ -49,16 +49,15 @@ New Places
 </div>
 </div>
 <div style="width: 100%; float: none;">
-<label for="tagsearch-text">Search tags </label> <!-- TODO would be nice if you could auto add on click and also see the full list (allow scrolling) wihtout having to type anything ... the w3 ARIA thing seemed promising for this but it decided to delete the dynamic options whenever focus went to the combobox. Not fixing that issue tonight. https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-autocomplete-both/ -->
-<!-- TODO seems like there's some bugs around the remove button when searching... especially when hitting search on an empty string (that should just ingore the search)-->
-<input id="tagsearch-text" list="tag-suggest">
-<button id="tagsearch-button">Search</button>
-<button id="tagsearch-clear">Clear</button>
-<div id="searchtaglist"></div>
+Search tags (click to add): <span id="searchtagoptions"></span><br>
+Current search (click to remove, or <button id="tagsearch-clear">Clear All</button>): <span id="searchtaglist"></span>
 <h2>Sample Output</h2>
 <div id="logs"></div>
+<h2> Footnotes </h2>
+<ol id="footnotes">
+</ol>
+<div class="tooltip-container"></div>
 <script src="./printPlaceList.js"></script>
-<script src="./combobox.js"></script>
 <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.js"></script>
 <script>
 const inputs = {
@@ -69,7 +68,6 @@ const inputs = {
     content: document.getElementById("content"),
     generate: document.getElementById("generate")
 };
-// TODO counters for numbers of places, also better orphan warning system
 const placelist = () => myplacelist.concat(newplacelist);
 const newplacelist = [];
 inputs.generate.addEventListener("click", () => {
@@ -90,7 +88,6 @@ inputs.generate.addEventListener("click", () => {
     loadNewPlaces();
 });
 let taglist = [];
-// TODO handle other places
 // TODO how the heck is the footnotes system supposed to work...
 function loadNewPlaces() {
     const mydiv = document.getElementById("newplacediv");
