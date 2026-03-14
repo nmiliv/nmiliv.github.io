@@ -8,6 +8,16 @@
 // footnotes strategy: use spans with class footnotes, on load, pull internal text and replace with numbers and link, and generate footnote table at the bottom as usual. so like <span class="footnote">footnote content</span> diplays as <span class="headnote">[0]</span> with <li> at the bottom.
 
 // text search: find items matching search, add all parents of matches (minimal content), add all children of matches (collapsed... ugh that means adding collapsible content.) Actually no, just do the normal thing of minimize parents, but show all children unollapsed.
+// TODO once text search is done, add the australia easter egg
+// TODO add headers and footers to all of the website stuff
+// TODO alphabetize tags on display
+// TODO make the transit sorting multilingual
+
+// TODO places that sill need writing about: medvescak, cat cafe zagreb, london underground needs linking help, some Toronto other places are missing restaurant tag. Ended upload at end of London
+// TODO do we want to split bigger cities like London into buroughs? ugh and we need a tag for the sub-boroughs, are those towns?
+// TODO Horley should.. Horley something idk.
+// TODO missing the last bar in Soho. Also good luck finding the salsa bar haha.
+// TODO mobile layout, footnotes break on mobile.
 
 const searchClearButton = document.getElementById("tagsearch-clear");
 let searchtaglist = [];

@@ -156,7 +156,7 @@ const downloadFile = () => {
     }
     for (const place of newplacelist2) {
         place.content = place.content.replace(/(<img[^<>]*src=")([A-Za-z0-9_]*)("[^<>]*>)/ig, (match, p1, p2, p3, offset, string, groups) => {
-            return "places/" + p1 + finalImageNames[Number(p2)] + p3;
+            return p1 + "places/" + finalImageNames[Number(p2)] + p3;
         });
         zip.file(place.name+"_"+place.parentName+".json", JSON.stringify(place));
     }
