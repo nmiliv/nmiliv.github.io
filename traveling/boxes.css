@@ -29,3 +29,7 @@ label{
     box-shadow: 0 0;
     transform: translate(0px 0px);
 }
+
+img{
+    width: 50%;
+}

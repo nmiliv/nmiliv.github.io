@@ -12,8 +12,8 @@
 <div class="mainbody">
 <h1>Travelog Generator</h1>
 <p>Well, this is awkward! You normally shouldn't be able to see this page. This page is just to provide me with an easier way of generating JSON data of my travels to feed into the main travel webpage.</p>
-<div style="display: flex">
-<div style="max-width: 50%; float:left;">
+<div style="display: grid; grid-template-columns: 3fr 5fr 2fr; align-items: stretch; column-gap: 20px;">
+<div style="">
 <div style="display: flex;">
 <div style="width: 50%; float: left;">
 <label for="name">Name</label>
@@ -38,16 +38,24 @@
 
 <div style="width:100%; float: none;">
 <label for="content">Description</label>
-<textarea id="content" name="content" rows="5" cols="60"></textarea>
+<textarea id="content" name="content" rows="5"></textarea>
 
-<button id="generate" style="width:calc(100% - 20px); margin:10px">Create Place</button>
-<button id="download" style="width:calc(100% - 20px); margin:10px" onclick="downloadFile()">Download</button>
+<label for="upload-photo">Upload Photo</label>
+<input type="file" name="filename" accept="image/*" multiple id="upload-photo">
+<button id="add-photos">Add Photos</button>
+<div id="photos"></div>
+
+<button id="generate" style="width:calc(100%); margin-top:20px">Create Place</button>
+<button id="download" style="width:calc(100%); margin-top:20px" onclick="downloadFile()">Download</button>
 </div>
 </div>
-<div style="float: right; width:50%;" id="newplacediv">
-New Places
+<div id="sample-output" style="overflow-y: auto; height: 0; min-height: 100%;">
+</div>
+<div style="overflow-y: auto; height: 0; min-height: 100%" id="newplacediv">
+<h2>New places</h2>
 </div>
 </div>
+<br>
 <div style="width: 100%; float: none;">
 Search tags (click to add): <span id="searchtagoptions"></span><br>
 Current search (click to remove, or <button id="tagsearch-clear">Clear All</button>): <span id="searchtaglist"></span>
@@ -56,7 +64,7 @@ Current search (click to remove, or <button id="tagsearch-clear">Clear All</butt
 <h2> Footnotes </h2>
 <ol id="footnotes">
 </ol>
-<div class="tooltip-container"></div>
+<div class="tooltip-container"></div> <!-- this doesn't display anything unless someone is hovering over a footnote -->
 <script src="./printPlaceList.js"></script>
 <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.js"></script>
 <script>
@@ -66,17 +74,18 @@ const inputs = {
     tags: document.getElementById("tags"),
     tagbutton: document.getElementById("add-tag"),
     content: document.getElementById("content"),
-    generate: document.getElementById("generate")
+    generate: document.getElementById("generate"),
+    upload: document.getElementById("upload-photo"),
+    image: document.getElementById("add-photos"),
 };
-const placelist = () => myplacelist.concat(newplacelist);
+const placelist = () => {
+    const newplacelist2 = JSON.parse(JSON.stringify(newplacelist));
+    for (const place of newplacelist2) place.content = place.content.replace(/(<img[^<>]*src=")([A-Za-z0-9_]*)("[^<>]*>)/ig, replacer);
+    return myplacelist.concat(newplacelist2);
+};
 const newplacelist = [];
 inputs.generate.addEventListener("click", () => {
-    const newplace = {
-        name: inputs.name.value,
-        content: inputs.content.value};
-    newplace.parentName = inputs.parent.value;
-    if (taglist.length !== 0) newplace.taglist = JSON.parse(JSON.stringify(taglist));
-    newplacelist.push(newplace);
+    newplacelist.push(placeFromInputs());
     inputs.name.value = "";
     inputs.parent.value = "";
     inputs.content.value = "";
@@ -84,15 +93,18 @@ inputs.generate.addEventListener("click", () => {
     reloadTags(document.getElementById("taglist"), taglist);
     inputs.tags.value = "";
     clearPlaceList();
-    makePlaceList(myplacelist.concat(newplacelist), searchtaglist);
+    const newplacelist2 = JSON.parse(JSON.stringify(newplacelist));
+    for (const place of newplacelist2) place.content = place.content.replace(/(<img[^<>]*src=")([A-Za-z0-9_]*)("[^<>]*>)/ig, replacer);
+    makePlaceList(placelist(), searchtaglist);
     loadNewPlaces();
+    updateSampleOutput(placeFromInputs());
 });
 let taglist = [];
-// TODO how the heck is the footnotes system supposed to work...
 function loadNewPlaces() {
     const mydiv = document.getElementById("newplacediv");
-    mydiv.innrHTML = "";
-    while (mydiv.firstChild) mydiv.removeChild(mydiv.lastChild);
+    while(mydiv.firstChild) mydiv.removeChild(mydiv.lastChild);
+    mydiv.innerHTML = "";
+    mydiv.innerHTML = "<h2>New places</h2>";
     for (const place of newplacelist) {
         const newdiv = document.createElement("div");
         mydiv.appendChild(newdiv);
@@ -107,21 +119,48 @@ function loadNewPlaces() {
             newplacelist.splice(newplacelist.indexOf(place), 1);
             newdiv.remove();
             loadNewPlaces();
+            updateSampleOutput(placeFromInputs());
         });
         document.getElementById(place.name+"-rm-button").addEventListener("click", () => {
             newplacelist.splice(newplacelist.indexOf(place), 1);
+            newdiv.dispatchEvent(new Event("mouseout"));
             newdiv.remove();
             loadNewPlaces();
+            makePlaceList(placelist(), searchtaglist);
+        });
+        newdiv.addEventListener("mouseenter", () => {
+            updateSampleOutput(place);
+            // const samplediv = document.getElementById("sample-output");
+            // while (samplediv.firstChild) samplediv.removeChild(samplediv.lastChild);
+            // printPlace(place, samplediv, 0, "", []);
+        });
+        newdiv.addEventListener("mouseout", () => {
+            updateSampleOutput(placeFromInputs());
         });
     }
 }
 inputs.tagbutton.addEventListener("click", () => {
     if (inputs.tags.value !== "") taglist.push(inputs.tags.value);
-    reloadTags(document.getElementById("taglist"), taglist);});
+    reloadTags(document.getElementById("taglist"), taglist);
+    updateSampleOutput(placeFromInputs());
+    inputs.tags.value = "";});
 const downloadFile = () => {
     var zip = new JSZip();
     const link = document.createElement("a");
-    for (place of newplacelist) zip.file(place.name+"_"+place.parentName+".json", JSON.stringify(place));
+    const newplacelist2 = JSON.parse(JSON.stringify(newplacelist));
+    const finalImageNames = [];
+    for (const image of imagelist){
+        const imageName = Date.now().toString()+"_"+image.name;
+        zip.file(imageName, image);
+        finalImageNames.push(imageName);
+    }
+    for (const place of newplacelist2) {
+        place.content = place.content.replace(/(<img[^<>]*src=")([A-Za-z0-9_]*)("[^<>]*>)/ig, (match, p1, p2, p3, offset, string, groups) => {
+            return "places/" + p1 + finalImageNames[Number(p2)] + p3;
+        });
+        zip.file(place.name+"_"+place.parentName+".json", JSON.stringify(place));
+    }
+
     zip.generateAsync({type:"blob"}).then(function (blob) {
         const file = new Blob([blob], {type: 'application/json'});
         link.href = URL.createObjectURL(file);
@@ -129,7 +168,63 @@ const downloadFile = () => {
         link.click();
         URL.revokeObjectURL(link.href);
     });
+    // and then maybe we want to do some cleanup here, but honestly I don't really see us doing that for safety (i.e. going to download and then aborting) reasons.
 };
+
+function replacer(match, p1, p2, p3, offset, string, groups){
+    return p1 + imgurls[Number(p2)] + p3;
+}
+
+function placeFromInputs(){
+    const newplace = {
+            name: inputs.name.value,
+            content: inputs.content.value};
+    newplace.parentName = inputs.parent.value;
+    if (taglist.length !== 0) newplace.taglist = JSON.parse(JSON.stringify(taglist));
+    return newplace;
+}
+
+function updateSampleOutput(newplace){
+    const newplace2 = JSON.parse(JSON.stringify(newplace));
+    const samplediv = document.getElementById("sample-output");
+    while(samplediv.firstChild) samplediv.removeChild(samplediv.lastChild);
+    newplace2.content = newplace2.content.replace(/(<img[^<>]*src=")([A-Za-z0-9_]*)("[^<>]*>)/ig, replacer); // This regex matches image tags, start with <img, then look past everything (excpet closing tags) until we get to the source tag, keep the content of the source tag as our match group (we need to pull data from inside the src content), and then match everything except the end of the tag until we get to the end of the tag. ig is used for ignore case and global, then we call our replacer function which transforms the input by finding the matching imgurl[] index.
+    // TODO add CSS for images to make them not monstrous
+    printPlace(newplace2, samplediv, 0, "", []);
+    updateFootnotes();
+}
+
+
+for (const item of ["name", "parent", "content"]) {
+    const el = document.getElementById(item);
+    el.addEventListener("input", () => {updateSampleOutput(placeFromInputs())});
+}
+const imagelist = []; // need to revoke URLs when we donwload things, but honestly probably not doing that because I don't see us keeping the page open forever.
+const imgurls = [];
+inputs.image.name="filename";
+inputs.image.addEventListener("click", () => {
+    for (const item of inputs.upload.files){
+        imagelist.push(item);
+        const picurl = URL.createObjectURL(item);
+        imgurls.push(picurl);
+    }
+    const picsdiv = document.getElementById("photos");
+    while(picsdiv.firstChild) picsdiv.removeChild(picsdiv.lastChild);
+    for (const picurl of imgurls){
+        const picbutton = document.createElement("button");
+        imgObj = document.createElement("img");
+        imgObj.src = picurl;
+        picbutton.appendChild(imgObj);
+        imgObj.style.width = "5em";
+        picsdiv.appendChild(picbutton);
+    }
+    updateSampleOutput(placeFromInputs());
+    // downloading should probably clear all internal data (URLs, newplacelist, image uploads, etc) --> no, this is a bad idea in case we abort the download at any point. Just do a hard (or soft) refresh to clear the cache once safe.
+});
+// images stay persistent while creating posts, don't delete or change the image list while editing.
+// need some way to show the names of image file
+// ok so use URL.createObjectURL() to create temporary URL, during editing just use src="1" etc, during editing display, swap out src="x" for blob URL, during download when filepaths are solidified, swap out src="x" for permanent URL... images are not going to be associated with a specific place? Yeah no, no association.
+// remove image on click --> this could screw over other things by changing image IDs, best not to let the image IDs change. These are only temporary anyway.
 </script>
 </div>
 </body>
