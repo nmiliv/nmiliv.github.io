@@ -8,16 +8,48 @@
 // footnotes strategy: use spans with class footnotes, on load, pull internal text and replace with numbers and link, and generate footnote table at the bottom as usual. so like <span class="footnote">footnote content</span> diplays as <span class="headnote">[0]</span> with <li> at the bottom.
 
 // text search: find items matching search, add all parents of matches (minimal content), add all children of matches (collapsed... ugh that means adding collapsible content.) Actually no, just do the normal thing of minimize parents, but show all children unollapsed.
+
+
+// These are done, just need verification:
+
+// these places need writing: medvescak, cat cafe zagreb, salsa bar in Soho, Malithi bar, cloughjordan cafe, pt teyes, meridian missisippi, CA and bay area transits etc need re-writing, pizza place in tahoe or truckee or something? skiing in general? colma lol. los altos hills --> nice place to go biking. gorgas house! village of providence. MSP airport, don't really like the footnote as is. black mesa in NM, madison AL
+// these places need linking (maybe we should automate this? either way, it would require trawling everything again): london underground needs linking help, Derry needs linking as well. Beast mode. Pt reyes and birling gap (predicted), northport, boojums
+// things to check for on trawl: linking, pictures, might have dropped some transits, jack brown consistency, chicago transit name?
+// formatting checks: airports, transit, external links
+// thse places need pictures: toybox bistro
+// fix castro street, needs to list all of the places there. --> this might actually be a tags issue
+// would be cool if we had a map of california and where each region is, especially since i'm kinda eyeballing these instead of using any formal definitions.
+// why are some cities broken up into neighborhoods but others aren't? This was done mostly based on vibes, which is highly dependent on how much time I have spent there. Reach out to fix.
+// seriosuly, recheck all the transit agency names and make sure the format is consistent
+
+
+// choices that need to be made:
+// TODO Horley should.. Horley something idk. London airports are an absolute mess. Maybe cities with multiple airports should just have an airports category? Also should airports display above alpha listed places like transit does?
+// TODO do we want to add people/bands/etc? (cork Red Sun, Limerick DJ Egg, Huntsville music and people, marquette bimbo)
+
+// giving up:
+// TODO remove tag should force preview update
+
+// formatting:
+// better paragraph breaks, also more space after tags
+// clean up area, region, etc tags. Kind of a mess right now.
+// need to clean up market/mall/plaza listings, also those need to be a category somehow. Maybe add a new category for missing places?
+
+
+// these are still not done:
+// text search
 // TODO once text search is done, add the australia easter egg
 // TODO add headers and footers to all of the website stuff
-// TODO alphabetize tags on display
-// TODO make the transit sorting multilingual
-
-// TODO places that sill need writing about: medvescak, cat cafe zagreb, london underground needs linking help, some Toronto other places are missing restaurant tag. Ended upload at end of London
-// TODO do we want to split bigger cities like London into buroughs? ugh and we need a tag for the sub-boroughs, are those towns?
-// TODO Horley should.. Horley something idk.
-// TODO missing the last bar in Soho. Also good luck finding the salsa bar haha.
 // TODO mobile layout, footnotes break on mobile.
+// TODO add favorites and recent additions (filter by added since...)
+// TODO tag groups? i.e. food, locale (country city borough) etc
+// need to be able to click on any place to edit
+// new york state and new york city, ideally if the name says "new york" then only print "new york"
+
+// once finished:
+// send final product to: northeast crew, Anna, Soup, Eli REU, Gabby?
+
+// So for some reason the evil >:( tag will not be assigned a color, but honestly that's pretty funna and imma keep it that way lol. Update: this is now a feature not a bug.
 
 const searchClearButton = document.getElementById("tagsearch-clear");
 let searchtaglist = [];
@@ -32,10 +64,12 @@ searchClearButton.addEventListener("click", () => {
     makePlaceList(placelist()); // can use default argument since this clears the search
 });
 alltags = [];
+let taglist = [];
 window.onload = async function() {
     myplacelist = await returnPlaceList();
     makePlaceList(myplacelist); // ok to use default argument bc tag search is empty --> unless we start doing funny URL things
-    reloadTags(document.getElementById("taglist"), taglist, placelist());
+    const tagElement = document.getElementById("taglist");
+    if(tagElement !== null) reloadTags(tagElement, taglist, placelist()); // seems like this works fine lol...
     loadSearchTags();
 }
 let myplacelist = [];
@@ -113,11 +147,12 @@ function printPlace(place, container, level=0, special="", displaytags = []){
         header.style.top = (30*level) + "px"; // for each recursion level, offset the sticky position so that it doesn't overlap with the previous title
         header.style.zIndex = String(100-level);
         header.append(place.name);
+        if (place.taglist.some((el) => el.toUpperCase() === "FAVORITE")) header.append(" ★"); // TODO recolor the star
         newdiv.appendChild(header);
     }
     if (search || (place.name.toUpperCase() === "OTHER PLACES")) { // so this is here because otherwise searching for e.g. City that returned an Other Places would result in Other Places not receiving the proper tag. Through some testing, it appears that this will not accidentally cause all Other Places to print when not searching for Other Places.
         if ('taglist' in place) {
-            for (const tag of place.taglist) {
+            for (const tag of place.taglist.sort((a,b) => sortAlphaSpecial(a,b))) {
                 generateTag(tag, () => {
                     pushIfUnique(searchtaglist, tag);
                     searchFunction();
@@ -140,7 +175,7 @@ function printPlace(place, container, level=0, special="", displaytags = []){
             li.appendChild(document.createTextNode(otherplace.name));
             if ('taglist' in otherplace) {
                 li.appendChild(document.createTextNode(" ("));
-                for (const tag of otherplace.taglist) {
+                for (const tag of otherplace.taglist.sort((a,b) => sortAlphaSpecial(a,b))) {
                     generateTag(tag, () => {
                         pushIfUnique(searchtaglist, tag);
                         searchFunction();
@@ -175,8 +210,10 @@ function sortAlphaSpecial(a,b) {
     if (typeof b === 'string') b = {name: b};
     const nameA = a.name.toUpperCase();
     const nameB = b.name.toUpperCase();
-    if (nameA.includes("TRANSIT") || nameB === "NEXT TIME") return -1; // ensure transit comes first and other places comes last
-    if (nameB.includes("TRANSIT") || nameA === "NEXT TIME") return  1;
+    if (nameA.includes("FAVORITE")) return -1;
+    if (nameB.includes("FAVORITE")) return 1;
+    if (nameA.includes("TRANSIT") || nameA.includes("PRIJEVOZ") || nameB === "NEXT TIME") return -1; // ensure transit comes first and other places comes last
+    if (nameB.includes("TRANSIT") || nameB.includes("PRIJEVOZ") || nameA === "NEXT TIME") return  1;
     if (nameA === "OTHER PLACES") return  1; // neither name is transit or next time, or we would have hit one of the previosu ifs
     if (nameB === "OTHER PLACES") return -1;
     if (nameA < nameB) return -1; // if not a special case, then regular sort
@@ -308,7 +345,12 @@ function makePlaceList(placelist, displaytaglist = [], textsearch = []){
     alltags.sort((a,b) => sortAlphaSpecial(a,b));
     const cssStyle = document.createElement('style');
     cssStyle.type = 'text/css';
-    for (let i = 0; i < alltags.length; i++) cssStyle.appendChild(document.createTextNode(".tag-" + alltags[i].replace(" ", "-") + "{background-color: hsl(" + i/alltags.length*360 + "deg 60% 40%);}"));
+    alltaglen = alltags.length;
+    if (alltags.some((el) => el.toUpperCase() === "FAVORITE")){
+        alltaglen = alltaglen - 1;
+        cssStyle.appendChild(document.createTextNode(".tag-Favorite" + "{background-color: hsl(" + 55 + "deg 60% 40%);}"));
+    }
+    for (let i = 0; i < alltaglen; i++) if (!/[>:\(\)]/.test(alltags[i])) if (alltags[i].toUpperCase() !== "FAVORITE") cssStyle.appendChild(document.createTextNode(".tag-" + alltags[i].replaceAll(" ", "-") + "{background-color: hsl(" + i/alltaglen*360 + "deg 60% 40%);}"));
     document.getElementsByTagName("head")[0].appendChild(cssStyle);
     loadSearchTags();
     updateFootnotes();
@@ -389,8 +431,9 @@ function generateTag(buttonText, callback, parent){
     // also should take in a function for what to do when clicked
     const ret = document.createElement("button");
     ret.classList.add("tag");
-    ret.classList.add("tag-"+buttonText.replace(" ", "-"));
-    ret.textContent = buttonText;
+    ret.classList.add("tag-"+buttonText.replaceAll(" ", "-"));
+    if(buttonText.toUpperCase() === "FAVORITE") ret.textContent = "★";
+    else ret.textContent = buttonText;
     ret.addEventListener("click", callback);
     parent.appendChild(ret);
 }

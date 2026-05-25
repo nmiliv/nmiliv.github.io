@@ -27,8 +27,7 @@
 
 <label for="tags">Tags</label>
 <input id="tags" list="tag-suggest">
-<datalist id="tag-suggest">
-</datalist>
+<datalist id="tag-suggest"></datalist>
 <button id="add-tag">Add Tag</button>
 <br>
 </div>
@@ -99,7 +98,7 @@ inputs.generate.addEventListener("click", () => {
     loadNewPlaces();
     updateSampleOutput(placeFromInputs());
 });
-let taglist = [];
+
 function loadNewPlaces() {
     const mydiv = document.getElementById("newplacediv");
     while(mydiv.firstChild) mydiv.removeChild(mydiv.lastChild);
