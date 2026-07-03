@@ -1,11 +1,31 @@
 .travel-children{
     padding-left: 10px;
     border-left: 2px ridge #fff;
+    margin-top: 8pt;
 }
 
 label{
     display: block;
     padding-top:10px;
+}
+
+h3{
+    padding-top: 0px;
+}
+
+.bordered{
+    border: 2px ridge #fff;
+    margin: 10px;
+    padding: 10px;
+}
+
+.fave-news{
+    width: calc(50% - 20px);
+    box-sizing: border-box;
+}
+
+@media (max-width: 750px){
+    .fave-news{ width: calc(100% - 20px);}
 }
 
 .tag{
@@ -19,6 +39,8 @@ label{
     box-shadow: 0px 0px;
     transform: translate(0px, 0px);
     transition: 0.3s;
+    margin: 3px;
+    background: hsl(0, 0%, 35%)
 }
 .tag:hover{
     box-shadow: 2px 2px;
@@ -30,6 +52,60 @@ label{
     transform: translate(0px 0px);
 }
 
-img{
-    width: 50%;
+img {
+    display: block;
+    max-height:50vh;
+    width: auto;
+    height: auto;
+    padding: 10px;
+}
+
+.fave-list{
+    padding: 2px;
+}
+
+.scroll-shadows {
+
+  --shadow: rgba(10, 10, 10, 1);
+
+  background:
+    /* Shadow Cover TOP */
+    linear-gradient(
+      var(--main-background-color) 30%,
+      var(--main-background-color-trans)
+    ) center top,
+
+    /* Shadow Cover BOTTOM */
+    linear-gradient(
+      var(--main-background-color-trans),
+      var(--main-background-color) 70%
+    ) center bottom,
+
+    /* Shadow TOP */
+    linear-gradient(
+/*       farthest-side at 50% 0, */
+      var(--shadow),
+      rgba(0, 0, 0, 0)
+    ) center top,
+
+    /* Shadow BOTTOM */
+    linear-gradient(
+/*       farthest-side at 50% 100%, */
+      rgba(0, 0, 0, 0),
+      var(--shadow)
+    ) center bottom;
+
+  background-repeat: no-repeat;
+  background-size: 100% 60px, 100% 60px, 100% 30px, 100% 30px;
+  background-attachment: local, local, scroll, scroll;
+}
+
+hr{
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, var(--main-background-color-trans), rgba(255, 255, 255, 1), var(--main-background-color-trans));
+}
+
+.fave-star{
+    color: hsl(55deg, 60%, 60%);
 }

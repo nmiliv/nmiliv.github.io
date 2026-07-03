@@ -1,5 +1,6 @@
 body{
     --main-background-color: hsl(0,0%,15%);
+    --main-background-color-trans: hsla(0,0%,15%,0);
     background-color: var(--main-background-color);
     color: hsl(0,0%,100%);
     --main-font-family: serif;
@@ -16,6 +17,9 @@ td{
 .mainbody{
     width: 70%;
     margin: auto;
+}
+@media (max-width: 700px) {
+    .mainbody{ width: calc(100% - 50px)}
 }
 .center{
     margin: auto;

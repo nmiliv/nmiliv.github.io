@@ -56,8 +56,16 @@
 </div>
 <br>
 <div style="width: 100%; float: none;">
+<div>
+<div id="favorite-places" class="bordered fave-news" style="float: left;"><h2 style="margin-top: 0px;">Favorites</h2></div>
+<div id="new-additions" class="bordered fave-news" style="float: right;"><h2 style="margin-top: 0px;">New Additions</h2></div>
+<br style="clear: both">
+</div>
+<div style="clear: both;">
+Search tags by group: <span id="search-tag-group-options"></span><br>
 Search tags (click to add): <span id="searchtagoptions"></span><br>
 Current search (click to remove, or <button id="tagsearch-clear">Clear All</button>): <span id="searchtaglist"></span>
+</div>
 <h2>Sample Output</h2>
 <div id="logs"></div>
 <h2> Footnotes </h2>
@@ -177,7 +185,8 @@ function replacer(match, p1, p2, p3, offset, string, groups){
 function placeFromInputs(){
     const newplace = {
             name: inputs.name.value,
-            content: inputs.content.value};
+            content: inputs.content.value,
+            /*timestamp: new Date()*/}; // TODO not sure why enabling this breaks things... but for the initial release this is fine, since everything is new
     newplace.parentName = inputs.parent.value;
     if (taglist.length !== 0) newplace.taglist = JSON.parse(JSON.stringify(taglist));
     return newplace;
@@ -188,7 +197,6 @@ function updateSampleOutput(newplace){
     const samplediv = document.getElementById("sample-output");
     while(samplediv.firstChild) samplediv.removeChild(samplediv.lastChild);
     newplace2.content = newplace2.content.replace(/(<img[^<>]*src=")([A-Za-z0-9_]*)("[^<>]*>)/ig, replacer); // This regex matches image tags, start with <img, then look past everything (excpet closing tags) until we get to the source tag, keep the content of the source tag as our match group (we need to pull data from inside the src content), and then match everything except the end of the tag until we get to the end of the tag. ig is used for ignore case and global, then we call our replacer function which transforms the input by finding the matching imgurl[] index.
-    // TODO add CSS for images to make them not monstrous
     printPlace(newplace2, samplediv, 0, "", []);
     updateFootnotes();
 }

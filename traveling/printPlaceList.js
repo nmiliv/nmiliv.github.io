@@ -1,5 +1,6 @@
 // TODO favicon issue
 // TODO world map, or add coordinates somehow, or the date of writing or time of visit...
+// TODO click on images to enlarge them
 //  graph showing all places and tag connections somehow... sorta like a subway map of sorts? so parent inherits all tags of child, all the way back to root.
 // note: if you are searching through tag classes, remember to replace whitespace with dashes
 // low hanging fruit: text search --> text can wait till later
@@ -24,7 +25,7 @@
 
 
 // choices that need to be made:
-// TODO Horley should.. Horley something idk. London airports are an absolute mess. Maybe cities with multiple airports should just have an airports category? Also should airports display above alpha listed places like transit does?
+// Horley should.. Horley something idk. London airports are an absolute mess. Maybe cities with multiple airports should just have an airports category? Also should airports display above alpha listed places like transit does?
 // TODO do we want to add people/bands/etc? (cork Red Sun, Limerick DJ Egg, Huntsville music and people, marquette bimbo)
 
 // giving up:
@@ -41,15 +42,14 @@
 // TODO once text search is done, add the australia easter egg
 // TODO add headers and footers to all of the website stuff
 // TODO mobile layout, footnotes break on mobile.
-// TODO add favorites and recent additions (filter by added since...)
-// TODO tag groups? i.e. food, locale (country city borough) etc
-// need to be able to click on any place to edit
-// new york state and new york city, ideally if the name says "new york" then only print "new york"
 
 // once finished:
 // send final product to: northeast crew, Anna, Soup, Eli REU, Gabby?
 
 // So for some reason the evil >:( tag will not be assigned a color, but honestly that's pretty funna and imma keep it that way lol. Update: this is now a feature not a bug.
+
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 
 const searchClearButton = document.getElementById("tagsearch-clear");
 let searchtaglist = [];
@@ -71,7 +71,110 @@ window.onload = async function() {
     const tagElement = document.getElementById("taglist");
     if(tagElement !== null) reloadTags(tagElement, taglist, placelist()); // seems like this works fine lol...
     loadSearchTags();
+    loadTagGroups();
+    load_favorites();
+    load_recents();
 }
+
+function create_fave_new(item){
+    const newdiv = document.createElement("div");
+    const textdiv = document.createElement("div");
+    textdiv.textContent = item.name + ((item.parentName !== "") ? " (" + item.parentName + ")" : "");
+    const jump_button = document.createElement("button");
+    jump_button.textContent = "Jump!";
+    jump_button.addEventListener("click", () => {window.location.href = "#" + item.name.replaceAll(" ", "-") + "-header";});
+    jump_button.style.float = "right";
+    newdiv.classList.add("fave-list");
+    newdiv.style.display = "flex";
+    newdiv.style.alignItems= "center";
+    textdiv.style.flexGrow = "1";
+    jump_button.style.flexBasis = "0";
+    newdiv.appendChild(textdiv);
+    newdiv.appendChild(jump_button);
+    return newdiv;
+}
+
+function load_favorites(){
+    const favorites = myplacelist.filter(item => {
+        // console.log("Checking", item);
+        if('taglist' in item) return item.taglist.some((el) => el.toUpperCase() === "FAVORITE");
+        else return false;
+    });
+    const favesdiv = document.createElement("div");
+    // favesdiv.classList.add("bordered");
+    favesdiv.style.maxHeight = "200pt";
+    favesdiv.style.overflowY = "auto";
+    for (const item of favorites){
+        // console.log(item);
+        // console.log(item.name);
+        // const favorite = document.createElement("span");
+        // favorite.textContent = item.name + " (" + item.parentName + ")";
+        // const jump_button = document.createElement("button");
+        // jump_button.textContent = "Jump!";
+        // jump_button.addEventListener("click", () => {window.location.href = "#" + item.name.replaceAll(" ", "-") + "-header";});
+        // jump_button.style.float = "right";
+        // favorite.classList.add("fave-list");
+        // favorite.appendChild(jump_button);
+        const favorite = create_fave_new(item);
+        favesdiv.appendChild(favorite);
+    }
+    document.getElementById("favorite-places").appendChild(favesdiv);
+}
+function load_recents(){
+    const timesort = (a, b) => {
+        if (!("timestamp" in a)) a.timestamp = 0;
+        if (!("timestamp" in b)) b.timestamp = 0;
+        return b.timestamp - a.timestamp;
+    }
+    myplacelist.sort((a, b) => timesort(a, b));
+    // try to load the first ten (or first five), and then continue loading so long as the jump is less than one day
+    const recentslist = myplacelist.slice(0, 10);
+    for(let index = 10; index < myplacelist.length && timesort(myplacelist[index-1], myplacelist[index]) < 86400000; index++) recentslist.push(myplacelist[index]);
+
+    const recentsdiv = document.createElement("div");
+    recentsdiv.style.maxHeight = "200pt";
+    recentsdiv.style.overflowY = "auto";
+    recentsdiv.classList.add("scroll-shadows");
+    let currdate = new Date();
+    // TODO add option to load more places!
+    for (const item of recentslist){
+        // console.log(item);
+        // console.log(item.name);
+        if (currdate - item.timestamp > 86400000){
+            currdate = item.timestamp;
+            const breaker = document.createElement("div");
+            const textspan = document.createElement("span"); //⮞  ⮜
+            textspan.innerHTML = "<i>" + ((typeof currdate === "object") ? currdate.getDate() + " " + monthNames[currdate.getMonth()] + " " + currdate.getFullYear() : "A long time ago") + "</i>";
+            breaker.style.display = "flex";
+            breaker.style.justifyContent = "center";
+            textspan.flexBasis = "0";
+            const line = document.createElement("hr");
+            line.style.flexGrow = "1";
+            const line2 = document.createElement("hr");
+            line2.style.flexGrow = "1";
+            breaker.appendChild(line);
+            breaker.appendChild(textspan);
+            breaker.appendChild(line2);
+            // breaker.style.position = "sticky"; // TODO maybe sometime in the future...
+            // breaker.style.top = "0";
+            recentsdiv.appendChild(breaker);
+        }
+        // const recent = document.createElement("div");
+        // recent.textContent = item.name + " (" + item.parentName + ")";
+        // const jump_button = document.createElement("button");
+        // jump_button.textContent = "Jump!";
+        // jump_button.addEventListener("click", () => {window.location.href = "#" + item.name.replaceAll(" ", "-") + "-header";});
+        // jump_button.style.float = "right";
+        // recent.classList.add("fave-list");
+        // recent.appendChild(jump_button);
+        const recent = create_fave_new(item);
+        recentsdiv.appendChild(recent);
+    }
+    document.getElementById("new-additions").appendChild(recentsdiv);
+}
+
+// new additions: sort all posts from newest to oldest (posts with no date go at the end), find the date of the tenth post, find the lowest post on the list that matches that date, and then dispaly that. Add a button that syas "load more" that moves up at least ten more posts. Add breaks for each day. Display at the top should show how far we're going. Sticky the date breaks. Posts with no date are marked "begniing of time"
+
 let myplacelist = [];
 const loadSearchTags = () => {
     const newdiv = document.getElementById("searchtagoptions");
@@ -84,6 +187,21 @@ const loadSearchTags = () => {
     }
 };
 // to do finihs unfocus, can't do that now or else i'll miss my trains stop bc i'm too tired. I need to go out more often :)'
+
+const taggroups = [{name: "Food", taglist: ["Bakery", "Bar", "Breakfast", "Cafe", "Dinner", "Lunch", "Restaurant", "Snack"]}, {name: "Locale", taglist: ["Area", "Borough", "City", "Community Area", "Country", "District", "Hill", "Island", "Neighborhood", "Province", "Region", "State", "Town"]}, {name: "Place", taglist: ["Attraction", "Library", "Lookout", "Mall", "Market", "Museum", "Park", "Plaza", "Sports", "Store", "Thing", "Venue"]}, {name: "Jaunt", taglist: ["Bike Ride", "Hike", "Kayak", "Ski", "Swim"]}, {name: "Transportation", taglist: ["Transit", "Airport", "Train Station"]}];
+
+// todo add milwaukee post office... or just more post offices in general
+
+const loadTagGroups = () => {
+    const newdiv = document.getElementById("search-tag-group-options");
+    while (newdiv.firstChild) newdiv.removeChild(newdiv.lastChild);
+    for (const tag of taggroups){
+        generateGroupTag( tag.name, () => {
+            pushIfUnique(searchtaglist, tag.taglist);
+            searchFunction();
+        }, newdiv);
+    }
+};
 
 
 function printPlaceList(list, container, level=0, displaytags=[]){
@@ -142,13 +260,32 @@ function printPlace(place, container, level=0, special="", displaytags = []){
         const header = document.createElement("h3");
         header.style.position = "sticky";
         header.style.margin = "0px";
-        header.style.paddingTop = "20px";
+        // header.style.paddingTop = "20px";
         header.style.paddingBottom = "10px";
         header.style.top = (30*level) + "px"; // for each recursion level, offset the sticky position so that it doesn't overlap with the previous title
         header.style.zIndex = String(100-level);
-        header.append(place.name);
-        if (place.taglist.some((el) => el.toUpperCase() === "FAVORITE")) header.append(" ★"); // TODO recolor the star
+        header.id = place.name.replaceAll(" ", "-") + "-header";
+        if(place.name.includes("New York")) header.append("New York");
+        else header.append(place.name);
+        if (place.taglist.some((el) => el.toUpperCase() === "FAVORITE")) header.append(Object.assign(document.createElement("span"), {textContent: " ★", classList: "fave-star"}));
+        if (typeof inputs !== 'undefined') {
+            const editButton = document.createElement("button");
+            editButton.id = place.name + "-edit-button";
+            editButton.textContent = "Edit";
+            editButton.addEventListener("click", () => {
+                inputs.name.value = place.name;
+                inputs.parent.value = place.parentName;
+                if ('taglist' in place) taglist = place.taglist; // note: this used to be a deep copy but i'm unsure why...
+                reloadTags(document.getElementById("taglist"), taglist);
+                inputs.content.value = place.content;
+                newplacelist.splice(newplacelist.indexOf(place), 1);
+                loadNewPlaces();
+                updateSampleOutput(placeFromInputs());
+            });
+            header.appendChild(editButton);
+        }
         newdiv.appendChild(header);
+        newdiv.style.marginTop = "20px"
     }
     if (search || (place.name.toUpperCase() === "OTHER PLACES")) { // so this is here because otherwise searching for e.g. City that returned an Other Places would result in Other Places not receiving the proper tag. Through some testing, it appears that this will not accidentally cause all Other Places to print when not searching for Other Places.
         if ('taglist' in place) {
@@ -163,8 +300,20 @@ function printPlace(place, container, level=0, special="", displaytags = []){
         if (place.content !== "") {
             const textdiv = document.createElement("div");
             textdiv.innerHTML = place.content; // we use innerHTML magic here to preserve HTML magic in footnote generation and images and italics and such.
+            textdiv.style.marginTop = "10px";
             newdiv.appendChild(textdiv);
+            newdiv.appendChild(document.createElement("br"));
         }
+        const timediv = document.createElement("div");
+        timediv.style.fontStyle = "italic";
+        try{
+            timediv.textContent = "Last updated " + (("timestamp" in place) ? (place.timestamp.getDate() + " " + monthNames[place.timestamp.getMonth()] + " " + place.timestamp.getFullYear() + ".") : "a long time ago.");
+        }catch{
+            console.log(place);
+            console.log("timestamp" in place);
+            console.log(place.timestamp);
+        }
+        newdiv.appendChild(timediv);
     }
     container.appendChild(newdiv);
     function printListingSpecial(text) {
@@ -311,7 +460,7 @@ function makePlaceList(placelist, displaytaglist = [], textsearch = []){
         return statdiv;
     }
     statsdiv = document.createElement("div");
-    statsdiv.style = "display: flex";
+    statsdiv.style = "display: flex; flex-wrap: wrap;";
     createStatDiv(displaylist.length, "Total Entries", statsdiv);
     createStatDiv(displaylist.filter((element) => !('child' in element)).length, "Locations", statsdiv);
     createStatDiv(displaylist.filter((element) => {
@@ -353,6 +502,7 @@ function makePlaceList(placelist, displaytaglist = [], textsearch = []){
     for (let i = 0; i < alltaglen; i++) if (!/[>:\(\)]/.test(alltags[i])) if (alltags[i].toUpperCase() !== "FAVORITE") cssStyle.appendChild(document.createTextNode(".tag-" + alltags[i].replaceAll(" ", "-") + "{background-color: hsl(" + i/alltaglen*360 + "deg 60% 40%);}"));
     document.getElementsByTagName("head")[0].appendChild(cssStyle);
     loadSearchTags();
+    loadTagGroups();
     updateFootnotes();
 }
 
@@ -434,6 +584,16 @@ function generateTag(buttonText, callback, parent){
     ret.classList.add("tag-"+buttonText.replaceAll(" ", "-"));
     if(buttonText.toUpperCase() === "FAVORITE") ret.textContent = "★";
     else ret.textContent = buttonText;
+    ret.addEventListener("click", callback);
+    parent.appendChild(ret);
+}
+
+function generateGroupTag(buttonText, callback, parent){
+    const ret = document.createElement("button");
+    ret.classList.add("tag");
+    ret.classList.add("tag-group");
+    ret.classList.add("tag-group-"+buttonText.replaceAll(" ", "-"));
+    ret.textContent = buttonText;
     ret.addEventListener("click", callback);
     parent.appendChild(ret);
 }
