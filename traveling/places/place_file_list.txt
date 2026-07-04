@@ -109,6 +109,7 @@ Chiqueolatte_Logan Square.json
 City Cafe Diner_Huntsville.json
 City of Westminster_London.json
 Claunch_New Mexico.json
+Cliffs of Moher_Ireland.json
 Cloughjordan _Ireland.json
 Cochon Butcher_New Orleans.json
 Colorado_United States.json
@@ -257,6 +258,7 @@ Lowe Mill_Huntsville.json
 Lower East Side_Manhattan.json
 Luchthaven Brussel (BRU)_Brussels.json
 Lui’s Take Away_Limerick.json
+Madison_Huntsville.json
 Mad Malts Brewing_Huntsville.json
 Main Street Pizza_Marquette.json
 Mala Siblings_Flushing.json

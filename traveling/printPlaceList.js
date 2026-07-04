@@ -1,6 +1,7 @@
 // TODO favicon issue
 // TODO world map, or add coordinates somehow, or the date of writing or time of visit...
 // TODO click on images to enlarge them
+// TODO other places are erroneously getting a last updated tag
 //  graph showing all places and tag connections somehow... sorta like a subway map of sorts? so parent inherits all tags of child, all the way back to root.
 // note: if you are searching through tag classes, remember to replace whitespace with dashes
 // low hanging fruit: text search --> text can wait till later
@@ -104,6 +105,7 @@ function load_favorites(){
     // favesdiv.classList.add("bordered");
     favesdiv.style.maxHeight = "200pt";
     favesdiv.style.overflowY = "auto";
+    favesdiv.classList.add("scroll-shadows");
     for (const item of favorites){
         // console.log(item);
         // console.log(item.name);
@@ -188,7 +190,7 @@ const loadSearchTags = () => {
 };
 // to do finihs unfocus, can't do that now or else i'll miss my trains stop bc i'm too tired. I need to go out more often :)'
 
-const taggroups = [{name: "Food", taglist: ["Bakery", "Bar", "Breakfast", "Cafe", "Dinner", "Lunch", "Restaurant", "Snack"]}, {name: "Locale", taglist: ["Area", "Borough", "City", "Community Area", "Country", "District", "Hill", "Island", "Neighborhood", "Province", "Region", "State", "Town"]}, {name: "Place", taglist: ["Attraction", "Library", "Lookout", "Mall", "Market", "Museum", "Park", "Plaza", "Sports", "Store", "Thing", "Venue"]}, {name: "Jaunt", taglist: ["Bike Ride", "Hike", "Kayak", "Ski", "Swim"]}, {name: "Transportation", taglist: ["Transit", "Airport", "Train Station"]}];
+const taggroups = [{name: "Food", taglist: ["Bakery", "Bar", "Breakfast", "Cafe", "Dinner", "Lunch", "Restaurant", "Snack"]}, {name: "Locale", taglist: ["Area", "Borough", "City", "Community Area", "Country", "District", "Hill", "Island", "Neighborhood", "Province", "Region", "State", "Suburb", "Town"]}, {name: "Place", taglist: ["Attraction", "Library", "Lookout", "Mall", "Market", "Museum", "Park", "Plaza", "Sports", "Store", "Thing", "Venue"]}, {name: "Jaunt", taglist: ["Bike Ride", "Hike", "Kayak", "Ski", "Swim"]}, {name: "Transportation", taglist: ["Transit", "Airport", "Train Station"]}];
 
 // todo add milwaukee post office... or just more post offices in general
 
@@ -267,7 +269,7 @@ function printPlace(place, container, level=0, special="", displaytags = []){
         header.id = place.name.replaceAll(" ", "-") + "-header";
         if(place.name.includes("New York")) header.append("New York");
         else header.append(place.name);
-        if (place.taglist.some((el) => el.toUpperCase() === "FAVORITE")) header.append(Object.assign(document.createElement("span"), {textContent: " ★", classList: "fave-star"}));
+        if ('taglist' in place) if (place.taglist.some((el) => el.toUpperCase() === "FAVORITE")) header.append(Object.assign(document.createElement("span"), {textContent: " ★", classList: "fave-star"}));
         if (typeof inputs !== 'undefined') {
             const editButton = document.createElement("button");
             editButton.id = place.name + "-edit-button";
@@ -278,7 +280,10 @@ function printPlace(place, container, level=0, special="", displaytags = []){
                 if ('taglist' in place) taglist = place.taglist; // note: this used to be a deep copy but i'm unsure why...
                 reloadTags(document.getElementById("taglist"), taglist);
                 inputs.content.value = place.content;
-                newplacelist.splice(newplacelist.indexOf(place), 1);
+                // TODO maybe remove things from the master list if they go back to editing?
+                console.log(myplacelist.findIndex(el => place.name === el.name));
+                console.log(myplacelist.splice(myplacelist.findIndex(el => place.name === el.name), 1)); //maybe it's ok to just search for places with matching name? since I think we have to avoid name collisions anyway...
+                // TODO ugh need to check that we're not pulling negative one, might still need to pull from newplacelist
                 loadNewPlaces();
                 updateSampleOutput(placeFromInputs());
             });
@@ -307,10 +312,11 @@ function printPlace(place, container, level=0, special="", displaytags = []){
         const timediv = document.createElement("div");
         timediv.style.fontStyle = "italic";
         try{
-            timediv.textContent = "Last updated " + (("timestamp" in place) ? (place.timestamp.getDate() + " " + monthNames[place.timestamp.getMonth()] + " " + place.timestamp.getFullYear() + ".") : "a long time ago.");
+            timediv.textContent = "Last updated " + (("timestamp" in place && typeof place.timestamp === "object") ? (place.timestamp.getDate() + " " + monthNames[place.timestamp.getMonth()] + " " + place.timestamp.getFullYear() + ".") : "a long time ago.");
         }catch{
             console.log(place);
             console.log("timestamp" in place);
+            console.log(typeof place.timestamp);
             console.log(place.timestamp);
         }
         newdiv.appendChild(timediv);
