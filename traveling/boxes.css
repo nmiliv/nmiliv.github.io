@@ -26,7 +26,9 @@ h3{
 
 @media (max-width: 750px){
     .fave-news{ width: calc(100% - 20px);}
+    img{width: 100%;}
 }
+
 
 .tag{
     padding-left: 6px;
@@ -55,8 +57,6 @@ h3{
 img {
     display: block;
     max-height:50vh;
-    width: auto;
-    height: auto;
     padding: 10px;
 }
 
