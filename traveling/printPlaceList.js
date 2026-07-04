@@ -66,8 +66,8 @@ searchClearButton.addEventListener("click", () => {
 });
 alltags = [];
 let taglist = [];
-window.onload = async function() {
-    myplacelist = await returnPlaceList();
+async function loading_tasks(filenames) {
+    myplacelist = await returnPlaceList(myplacelist, filenames);
     makePlaceList(myplacelist); // ok to use default argument bc tag search is empty --> unless we start doing funny URL things
     const tagElement = document.getElementById("taglist");
     if(tagElement !== null) reloadTags(tagElement, taglist, placelist()); // seems like this works fine lol...
@@ -75,6 +75,11 @@ window.onload = async function() {
     loadTagGroups();
     load_favorites();
     load_recents();
+}
+window.onload = async function() {
+    const textfile = await getTextFile('./places/place_file_list.txt');
+    const filenames = textfile[0].split("\n");
+    loading_tasks(filenames);
 }
 
 function create_fave_new(item){
@@ -101,7 +106,11 @@ function load_favorites(){
         if('taglist' in item) return item.taglist.some((el) => el.toUpperCase() === "FAVORITE");
         else return false;
     });
+    if (document.getElementById("favesdiv") !== null){
+        document.getElementById("favesdiv").remove();
+    }
     const favesdiv = document.createElement("div");
+    favesdiv.id = "favesdiv";
     // favesdiv.classList.add("bordered");
     favesdiv.style.maxHeight = "200pt";
     favesdiv.style.overflowY = "auto";
@@ -133,7 +142,11 @@ function load_recents(){
     const recentslist = myplacelist.slice(0, 10);
     for(let index = 10; index < myplacelist.length && timesort(myplacelist[index-1], myplacelist[index]) < 86400000; index++) recentslist.push(myplacelist[index]);
 
+    if (document.getElementById("recentsdiv") !== null){
+        document.getElementById("recentsdiv").remove();
+    }
     const recentsdiv = document.createElement("div");
+    recentsdiv.id = "recentsdiv";
     recentsdiv.style.maxHeight = "200pt";
     recentsdiv.style.overflowY = "auto";
     recentsdiv.classList.add("scroll-shadows");
@@ -615,18 +628,46 @@ async function getTextFile(str) {
     ]); // I have no clue what this does, but it works.
     return responsetext;
 }
-async function returnPlaceList() {
-    const placelist = [];
-    const textfile = await getTextFile('./places/place_file_list.txt');
-    for (const filename of textfile[0].split("\n")) {
+
+const intermediate_promise_list = [];
+let lastUpdateTime = Date.now();
+
+async function returnPlaceList(placelist, filenames) {
+    const start_time = Date.now();
+    // const placelist = [];
+    console.log("Starting transfer, placelist has", placelist.length, "entries,", "textfile has", filenames.length, "entries.");
+    while(filenames.length > 0){
+        const filename = filenames.pop();
         if (filename !== "") {
             const requestURL = "./places/" + filename;
             const request = new Request(requestURL);
-            const response = await fetch(request);
-            const respJSON = await response.json();
-            placelist.push(respJSON);
+            intermediate_promise_list.push(fetch(request).then(response => response.json()).then(respJSON => {
+                placelist.push(respJSON);
+                if (Date.now() - lastUpdateTime > 500 || intermediate_promise_list.length === placelist.length){
+                    lastUpdateTime = Date.now();
+                    setTimeout(() => loading_tasks(filenames), 10);
+                    console.log("Updated graphics with", placelist.length, "places.")
+                }}));
+            // const response = await fetch(request);
+            // const respJSON = await response.json();
+            // placelist.push(respJSON);
+            if (Date.now() - start_time > 500){
+                setTimeout(() => loading_tasks(filenames), 10);
+                console.log("Ended transfer, placelist has", placelist.length, "entries,", "textfile has", filenames.length, "entries.");
+                return placelist;
+            }
         }
     }
+    // for (const filename of textfile[0].split("\n")) {
+    //     if (filename !== "") {
+    //         const requestURL = "./places/" + filename;
+    //         const request = new Request(requestURL);
+    //         const response = await fetch(request);
+    //         const respJSON = await response.json();
+    //         placelist.push(respJSON);
+    //     }
+    // }
+    // TODO add like a "finished loading" chime here
     return placelist;
 }
 function pushIfUnique(array, newitem) {
